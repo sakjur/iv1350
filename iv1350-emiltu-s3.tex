@@ -1,5 +1,6 @@
 \documentclass[a4paper]{scrreprt}
 \usepackage{fullpage} % Slightly more margins
+\usepackage{amsfonts}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \usepackage[english]{babel}
@@ -14,13 +15,15 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{listings} % Source code highlighting
+\usepackage{algpseudocode} % Algorithms
+\usepackage{courier}
 
 % Create header and footer
 \headheight 27pt
 \pagestyle{fancyplain}
 \lhead{\footnotesize{Object-Oriented Design, IV1350}}
 \chead{}
-\rhead{\footnotesize{Assignment 2 Report}}
+\rhead{\footnotesize{Assignment 3 Report}}
 \lfoot{}
 \cfoot{\thepage (\pageref{LastPage})}
 
@@ -31,7 +34,7 @@
 \date{2014-04-29}
 
 \graphicspath{ {./images/} }
-\lstset{language=Java, numbers=left}
+\lstset{basicstyle=\footnotesize\ttfamily, language=Java, numbers=left}
 
 \begin{document}
 
@@ -77,8 +80,39 @@ The tests made their way into the application quite late, which have caused a co
 \section{View, Controller and Startup}
 \label{sec:sup}
 
-\subsection{CacheLayout}
+In order to launch the application, there is need for a class handling the initialization of the controller and the view (which isn't fully covered in this report) and containing a \texttt{public static void main(String[] args)} function to be able to run the application from command-line. The class containing main is available in the \texttt{CacheSimulator}-class which source-code is available in subsection \ref{subsec:cachesimulator.java}.
+
+The \texttt{CacheSimulator}-class initializes an object of the class \texttt{Controller} (which source is in subsection \ref{subsec:controller.java}) which handles the communication between the model classes and the \texttt{View}.
+
+
+\subsection{Class: CacheSimulator}
+\label{subsec:cachesimulator.java}
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheSimulator.java}
+
+\subsection{Class: Controller}
+\label{subsec:controller.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Controller.java}
+
+\subsection{Class: View}
+\label{subsec:view.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/View.java}
+
+\section{Cache- and AddressLayout}
+\label{sec:cache}
+
+
+
+\begin{algorithmic}
+\State $x \in \mathbb{R} \geq 0$ 
+\If {$i \in 2^x$}
+    \State $\text{size of address element} \gets \log _2 i$ 
+\EndIf
+\end{algorithmic}
+
+\subsection{Class: CacheLayout}
+\label{subsec:cachelayout.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheLayout.java}
+
 
 \chapter{Discussion}
 
