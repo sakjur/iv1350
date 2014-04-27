@@ -64,7 +64,7 @@ The Java environment during the course of developing the application have consis
 
 As the application was already largely designed, implementation was made simplified. As the design was having a largely low coupling - it was possible to implement the separate classes for the design one by one, thus rapidly having a working application. The application were mostly written after the design with modifications were seemingly proper. During a period in the development process, the classes \texttt{CacheLayout} and \texttt{AddressLayout} was merged in the \texttt{CacheLayout}-class, but that idea was quickly scrapped since the class were dangerously close to becoming a megamodel containing most of the logic in the application.
 
-The tests made their way into the application quite late, which have caused a couple of hours of unnecessary debugging for bugs that would've been quickly discovered if the tests had been written before the actual code of the application, as the bugs were mostly quite clumsy.
+The tests made their way into the application quite late, which have caused a couple of hours of unnecessary debugging for bugs that would've been quickly discovered if the tests had been written before the actual code of the application, as the bugs were mostly quite a proof of my errors.
 
 \chapter{Result}
 \label{sec:result}
@@ -97,6 +97,14 @@ The \texttt{CacheSimulator}-class initializes an object of the class \texttt{Con
 \label{subsec:view.java}
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/View.java}
 
+\subsection{Class: Storage}
+\label{subsec:storage.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Storage.java}
+
+\subsection{Class: SimulationDTO}
+\label{subsec:simulationdto.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/SimulationDTO.java}
+
 \section{User}
 \label{sec:user}
 
@@ -120,7 +128,56 @@ The CacheLayout is created by the controller when the user have required for it'
 \label{subsec:cachelayout.java}
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheLayout.java}
 
+\subsection{Class: LayoutDTO}
+\label{subsec:layoutdto.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/LayoutDTO.java}
+
+\subsection{Class: AddressDTO}
+\label{subsec:addressdto.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/AddressDTO.java}
+
+\section{Instructions}
+
+\subsection{Enum: InstructionType}
+\label{subsec:instructiontype.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/InstructionType.java}
+
+\subsection{Class: Instruction}
+\label{subsec:instruction.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Instruction.java}
+
+\subsection{Class: InstructionDTO}
+\label{subsec:instructiondto.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/InstructionDTO.java}
+
+\subsection{Class: DataCache}
+\label{subsec:datacache.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/DataCache.java}
+
+\subsection{Class: Block}
+\label{subsec:block.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Block.java}
+
+\section{Tests}
+
+\subsection{Class: CacheLayout Test}
+\label{subsec:cachelayouttest.java}
+\lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/CacheLayoutTest.java}
+
+\subsection{Class: DataCache Test}
+\label{subsec:cachelayouttest.java}
+\lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/DataCacheTest.java}
+
+\subsection{Class: Storage Test}
+\label{subsec:cachelayouttest.java}
+\lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/StorageTest.java}
 
 \chapter{Discussion}
+
+\chapter{Attachements}
+
+\subsection{Class: MisMath}
+\label{subsec:mismath.java}
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/utils/MisMath.java}
 
 \end{document}
