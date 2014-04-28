@@ -64,18 +64,10 @@ The Java environment during the course of developing the application have consis
 
 As the application was already largely designed, implementation was made simplified. As the design was having a largely low coupling - it was possible to implement the separate classes for the design one by one, thus rapidly having a working application. The application were mostly written after the design with modifications were seemingly proper. During a period in the development process, the classes \texttt{CacheLayout} and \texttt{AddressLayout} was merged in the \texttt{CacheLayout}-class, but that idea was quickly scrapped since the class were dangerously close to becoming a megamodel containing most of the logic in the application.
 
-The tests made their way into the application quite late, which have caused a couple of hours of unnecessary debugging for bugs that would've been quickly discovered if the tests had been written before the actual code of the application, as the bugs were mostly quite a proof of my errors.
+The tests made their way into the application quite late, which have caused a couple of hours of unnecessary debugging for bugs that would've been quickly discovered if the tests had been written before the actual code of the application. The \texttt{Storage}-class was build by creating the tests simultaneously to the code, which most probably increased productivity and decreased the amount of bugs in the class.
 
 \chapter{Result}
 \label{sec:result}
-
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[scale=.5]{tldr.jpg}
-    \caption{Teal Deer}
-    \label{fig:sd}
-  \end{center}
-\end{figure}
 
 \section{View, Controller and Startup}
 \label{sec:sup}
@@ -155,6 +147,8 @@ Where \textit{i} is the \textit{BlockSize} in case of the offset and the \textit
 
 The final \texttt{AddressLayout} property is the tag size, which is $32 - (\text{indexSize} + \text{offsetSize})$ (assuming the 32-bit processor the simulator emulates).
 
+The \texttt{CacheLayout} is tested in \ref{subsec:cachelayouttest.java}.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheLayout.java}
 
 \subsection{Class: AddressLayout}
@@ -182,44 +176,68 @@ The \texttt{AddressDTO} is for transferring a parseable address. It is created b
 
 \subsection{Enum: InstructionType}
 \label{subsec:instructiontype.java}
+
+The \texttt{InstructionType}-type contains either \textit{STORE} or \textit{LOAD} and denotes if a single instruction was/is a store or load instruction.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/InstructionType.java}
 
 \subsection{Class: Instruction}
 \label{subsec:instruction.java}
+
+The \texttt{Instruction}-class executes a single instruction to a \texttt{DataCache} (in \ref{subsec:datacache.java}). When execution is done, the execution data is stored in an \texttt{InstructionDTO} (in \ref{subsec:instructiondto.java}) and sent to the callee.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Instruction.java}
 
 \subsection{Class: InstructionDTO}
 \label{subsec:instructiondto.java}
+
+The \texttt{InstructionDTO} contains data about a single instruction with boolean information about if the instruction was a hit or a miss, and data about which address it was specified toward in the cache and if it were a load or store instruction.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/InstructionDTO.java}
 
 \subsection{Class: DataCache}
 \label{subsec:datacache.java}
+
+The \texttt{DataCache} is a container for a number of \texttt{Block}s (in \ref{subsec:block.java}). The object also keeps track on the amount of hits, misses, stores and loads during it's lifetime.
+
+The \texttt{DataCache} is tested in \ref{subsec:datacachetest.java}.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/DataCache.java}
 
 \subsection{Class: Block}
 \label{subsec:block.java}
+
+A \texttt{Block}-objects is a lightweight single-position object within a cache. The objects are created by the \texttt{DataCache} (in \ref{subsec:datacache.java}) which calculates the correct amount of blocks from the \texttt{CacheLayout} (in \ref{subsec:cachelayout.java}) properties BlockCount and Associativity. There are $\text{BlockCount} * \text{Associativity}$ \texttt{Block}s in a single \texttt{DataCache}.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Block.java}
 
 \section{Tests}
 
 \subsection{Class: CacheLayout Test}
 \label{subsec:cachelayouttest.java}
+
+Test for the \texttt{CacheLayout}-class in \ref{subsec:cachelayout.java}.
+
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/CacheLayoutTest.java}
 
 \subsection{Class: DataCache Test}
 \label{subsec:datacachetest.java}
+
+Test for the \texttt{DataCache}-class in \ref{subsec:datacachetest.java}.
+
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/DataCacheTest.java}
 
 \subsection{Class: Storage Test}
 \label{subsec:storagetest.java}
+
+Test for the \texttt{Storage}-class in \ref{subsec:storagetest.java}.
+
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/StorageTest.java}
 
 \section{Output from a run}
 \lstinputlisting[language={}]{run.txt}
 
-\chapter{Discussion}
-
-\chapter{Attachements}
+\section{Utilities}
 
 \subsection{Class: MisMath}
 \label{subsec:mismath.java}
