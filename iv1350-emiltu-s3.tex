@@ -87,26 +87,43 @@ The \texttt{CacheSimulator}-class initializes an object of the class \texttt{Con
 
 \subsection{Class: CacheSimulator}
 \label{subsec:cachesimulator.java}
+
+The \texttt{CacheSimulator} bootstraps the \texttt{Controller} (in \ref{subsec:controller.java}) and the \texttt{View} (in \ref{subsec:view.java})
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheSimulator.java}
 
 \subsection{Class: Controller}
 \label{subsec:controller.java}
+
+The \texttt{Controller} is responsible for the connection between the different models and any view.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Controller.java}
 
 \subsection{Class: View}
 \label{subsec:view.java}
+
+The \texttt{View} simply keeps the application \texttt{Controller} (in \ref{subsec:controller.java}) connected to the user by presenting user friendly alternatives.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/View.java}
 
 \subsection{Class: Storage}
 \label{subsec:storage.java}
+
+The \texttt{Storage} is a non-persistent, singleton\footnote{i.e. there may ever only be a single \texttt{Storage}-object in existance in any one application.} storage unit, which keeps track of every single cache instruction (storing \texttt{InstructionDTO}s [which are referred to in \ref{subsec:instructiondto.java}]) and a couple of other data related to the application. The \texttt{Storage}-singleton may produce the vast majority of the content in a \texttt{SimulationDTO} (in \ref{subsec:simulationdto.java}) summarizing a single execution of the application. The \texttt{Storage}-object is written using TDD\footnote{The tests were written before the code} and it's tests are available at \ref{subsec:storagetest.java})
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/Storage.java}
 
 \subsection{Class: SimulationDTO}
 \label{subsec:simulationdto.java}
+
+The \texttt{SimulationDTO} is a data transfer object that keeps track of a summarized essential data of a single run of a cache simulation.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/SimulationDTO.java}
 
 \section{User}
 \label{sec:user}
+
+The User-handling part of the application is the simplest, and is just taking care of a single string-object, the \textit{nickname} and a \textit{datetime}-stamp.
 
 \subsection{Class: User}
 \label{subsec:user.java}
@@ -115,7 +132,17 @@ The \texttt{CacheSimulator}-class initializes an object of the class \texttt{Con
 \section{Cache- and AddressLayout}
 \label{sec:cache}
 
-The CacheLayout is created by the controller when the user have required for it's creation.
+During the second phase of the application's runtime, the \texttt{Controller} (from subsection \ref{subsec:controller.java}) creates a \texttt{DataCache} (in \ref{subsec:datacache.java}) based on a user specified \texttt{CacheLayout} (in \ref{subsec:cachelayout.java}). It also associates an \texttt{AddressLayout} (in subsection \ref{subsec:addresslayout.java}) which can be used on the virtual cache contained within the \texttt{DataCache}.
+
+The controller also stores the \texttt{CacheLayout} and \texttt{AddressLayout} data as a \texttt{LayoutDTO} (in \ref{subsec:layoutdto.java}) in the \texttt{Storage} singleton (from \ref{subsec:storage.java}) 
+
+\subsection{Class: CacheLayout}
+\label{subsec:cachelayout.java}
+
+The \texttt{CacheLayout} is created by the controller with a \textit{BlockSize}, \textit{BlockCount} and \textit{Associativity}. The block size and the block count has to be powers of two while the associativity may be anything to your liking.
+
+The \texttt{CacheLayout} creates a \texttt{AddressLayout} (in \ref{subsec:addresslayout.java}) by calculating it's properties from the \textit{BlockSize} and \textit{BlockCount} properties of the \texttt{CacheLayout}.
+The following formulae is used to determine the size of the index and offset sizes of the \texttt{AddressLayout}
 
 \begin{algorithmic}
 \State $x \in \mathbb{R} \geq 0$ 
@@ -124,16 +151,31 @@ The CacheLayout is created by the controller when the user have required for it'
 \EndIf
 \end{algorithmic}
 
-\subsection{Class: CacheLayout}
-\label{subsec:cachelayout.java}
+Where \textit{i} is the \textit{BlockSize} in case of the offset and the \textit{BlockCount} for the index. In the case that either the block size or the block count isn't a power of two, the operation will fail with an IllegalArgumentException.
+
+The final \texttt{AddressLayout} property is the tag size, which is $32 - (\text{indexSize} + \text{offsetSize})$ (assuming the 32-bit processor the simulator emulates).
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/CacheLayout.java}
+
+\subsection{Class: AddressLayout}
+\label{subsec:addresslayout.java}
+
+The \texttt{AddressLayout} contains three objects, the \textit{tag size}, the \textit{index size} and the \textit{offset size}. These values are calculated from the \textit{BlockSize} and \textit{BlockCount} from the \texttt{CacheLayout} (in \ref{subsec:cachelayout.java}).
+
+\lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/AddressLayout.java}
 
 \subsection{Class: LayoutDTO}
 \label{subsec:layoutdto.java}
+
+The \texttt{LayoutDTO} is a data transfer object that contains data regarding the properties of \texttt{AddressLayout} (in \ref{subsec:addresslayout.java}) and the \texttt{CacheLayout} (in \ref{subsec:cachelayout.java}). It stores the block size, block count, associativity, tag size, index size and offset size of a single cache.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/LayoutDTO.java}
 
 \subsection{Class: AddressDTO}
 \label{subsec:addressdto.java}
+
+The \texttt{AddressDTO} is for transferring a parseable address. It is created by splitting an address to it's respective block size, block count and associativity fields.
+
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/cache/AddressDTO.java}
 
 \section{Instructions}
@@ -165,12 +207,15 @@ The CacheLayout is created by the controller when the user have required for it'
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/CacheLayoutTest.java}
 
 \subsection{Class: DataCache Test}
-\label{subsec:cachelayouttest.java}
+\label{subsec:datacachetest.java}
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/DataCacheTest.java}
 
 \subsection{Class: Storage Test}
-\label{subsec:cachelayouttest.java}
+\label{subsec:storagetest.java}
 \lstinputlisting[language=Java]{cachesim/test/is/mjuk/cache/StorageTest.java}
+
+\section{Output from a run}
+\lstinputlisting[language={}]{run.txt}
 
 \chapter{Discussion}
 

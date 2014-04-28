@@ -1,0 +1,62 @@
+$ java -jar cachesim.jar 
+ASKS USER TO ENTER USER PROPERTIES
+Please enter nickname: 
+Emil 
+Your nickname is: Emil
+USER SPECIFIES BLOCK PROPERTIES
+Enter block size in bytes: 
+8
+Enter block count: 
+4
+Enter associativity: 
+2
+CALCULATES CACHE LAYOUT \& CREATES CACHE
+Displaying Cache Data
+Index 0x0: invalid 0x0 invalid 0x0 
+Index 0x1: invalid 0x0 invalid 0x0 
+Index 0x2: invalid 0x0 invalid 0x0 
+Index 0x3: invalid 0x0 invalid 0x0 
+
+USER INPUTS INSTRUCTIONS
+Write `exit` to stop the application
+To use instruction load, write 'load <memaddress>'
+To use instruction store, write 'store <memaddress>'
+load 19250410
+Miss load 0x92de7 0x1 0x2
+Hitrate is 0.00 and missrate is 1.00.
+store 19250410
+Hit store 0x92de7 0x1 0x2
+Hitrate is 0.50 and missrate is 0.50.
+load 743273567
+Miss load 0x1626ba2 0x3 0x7
+Hitrate is 0.33 and missrate is 0.67.
+load 19250410
+Hit load 0x92de7 0x1 0x2
+Hitrate is 0.50 and missrate is 0.50.
+load 15
+Miss load 0x0 0x1 0x7
+Hitrate is 0.40 and missrate is 0.60.
+load 19250410
+Hit load 0x92de7 0x1 0x2
+Hitrate is 0.50 and missrate is 0.50.
+store 16
+Miss store 0x0 0x2 0x0
+Hitrate is 0.43 and missrate is 0.57.
+exit
+Index 0x0: invalid 0x0 invalid 0x0 
+Index 0x1: valid 0x0 valid 0x92de7 
+Index 0x2: invalid 0x0 valid 0x0 
+Index 0x3: invalid 0x0 valid 0x1626ba2 
+
+Simulation data:
+Username: Emil
+Load instructions: 5
+Store instructions: 2
+Hit rate: 0.42857142857142855
+Miss rate: 0.5714285714285714
+Block Size: 8 bytes
+Block Count: 4 blocks
+Associativity: 2
+Address tag size: 27 bits
+Address index size: 2 bits
+Address offset size: 3 bits
