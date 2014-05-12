@@ -1,0 +1,217 @@
+diff --git a/source/is/mjuk/cache/Controller.java b/source/is/mjuk/cache/Controller.java
+index 21474a6..954cfa8 100644
+--- a/source/is/mjuk/cache/Controller.java
++++ b/source/is/mjuk/cache/Controller.java
+@@ -142,4 +142,12 @@ public class Controller
+         simDTO.setLoads(this.dataCache.getLoads());
+         return simDTO;
+     }
++
++    public void addDataCacheObserver(DataCacheObserver observer) {
++        this.dataCache.addObserver(observer);
++    }
++
++    public void removeDataCacheObserver(DataCacheObserver observer) {
++        this.dataCache.removeObserver(observer);
++    }
+ }
+diff --git a/source/is/mjuk/cache/DataCache.java b/source/is/mjuk/cache/DataCache.java
+index 9edbd95..4a6d51e 100644
+--- a/source/is/mjuk/cache/DataCache.java
++++ b/source/is/mjuk/cache/DataCache.java
+@@ -1,5 +1,6 @@
+ package is.mjuk.cache;
+ 
++import java.util.ArrayList;
+ import java.lang.StringBuilder;
+ import java.lang.Math;
+ 
+@@ -16,6 +17,8 @@ public class DataCache {
+     private int loads = 0;
+     private int stores = 0;
+     private Block[][] blockset;
++    private ArrayList<DataCacheObserver> observers = 
++        new ArrayList<DataCacheObserver>();
+ 
+     /**
+     * Parses a cache layout and generates the block objects
+@@ -54,6 +57,22 @@ public class DataCache {
+     }
+ 
+     /**
++    */
++    public void addObserver(DataCacheObserver observer) {
++        if (!this.observers.contains(observer)) {
++            this.observers.add(observer);
++        }
++    }
++
++    /**
++    */
++    public void removeObserver(DataCacheObserver observer) {
++        if (this.observers.contains(observer)) {
++            this.observers.remove(observer);
++        }
++    }
++
++    /**
+     * @return Number of sets in the cache (associativity)
+     */
+     public int getNumberOfSets() {
+@@ -158,7 +177,15 @@ public class DataCache {
+         currentBlock = this.blockset[cacheSet][(int) address.getIndex()];
+         currentBlock.setTag(address.getTag());
+ 
++        this.notifyObservers();
++
+         this.misses += 1;
+         return false;
+     }
++
++    private void notifyObservers() {
++        for (DataCacheObserver observer : this.observers) {
++            observer.recvDataCacheUpdate(this.displayCache());
++        }
++    }
+ }
+diff --git a/source/is/mjuk/cache/DataCacheObserver.java b/source/is/mjuk/cache/DataCacheObserver.java
+new file mode 100644
+index 0000000..b6fb6f7
+--- /dev/null
++++ b/source/is/mjuk/cache/DataCacheObserver.java
+@@ -0,0 +1,11 @@
++package is.mjuk.cache;
++
++/**
++* DataCacheObserver is an interface for objects that wish to observe a 
++* {@link is.mjuk.cache.DataCache}-object
++*
++* @see is.mjuk.cache.DataCache
++*/
++public interface DataCacheObserver {
++    public void recvDataCacheUpdate(String dataCacheContent);
++}
+\ No newline at end of file
+diff --git a/source/is/mjuk/cache/View.java b/source/is/mjuk/cache/View.java
+index ba71bdb..baa68f0 100644
+--- a/source/is/mjuk/cache/View.java
++++ b/source/is/mjuk/cache/View.java
+@@ -8,7 +8,7 @@ import java.util.Date;
+ * <p>
+ * Handles interaction between user and the application
+ */
+-public class View
++public class View implements DataCacheObserver
+ {
+     public static Scanner scanner = new Scanner(System.in);
+     Controller c;
+@@ -69,6 +69,7 @@ public class View
+                 legalData = false;
+             }
+         } while (!legalData);
++
+         System.out.println("Displaying Cache Data");
+         System.out.println(c.displayCache());
+     }
+@@ -83,47 +84,39 @@ public class View
+           System.out.println(
+             "To use instruction store, write 'store <memaddress>'"
+         );
++        System.out.println(
++            "To observe changes in the cache, write 'observe'"
++        );
++        System.out.println(
++            "To stop observing changes in the cache, write 'deobserve'"
++        );
+ 
+         while (true) {
+             String input = scanner.nextLine();
+-               input = input.trim();
++            input = input.trim();
++
++            String regex = "^[ls](oad|tore)?\\s(0[x]?)?[0-9a-fA-F]+";
+ 
+             if (input.toLowerCase().equals("exit") 
+                 || input.toLowerCase().equals("x")) {
+                 break;
+-            } else if (input.matches(
+-                "^[ls](oad|tore)?\\s(0[x]?)?[0-9a-fA-F]+"
+-            )) {
+-                long address = Long.decode(input.split("\\s")[1]);
+-
+-                try {
+-                    if (input.split("\\s")[0].matches("^l(oad)?$")) {
+-                        System.out.println(
+-                            c.executeInstruction("load", address).toString()
+-                        );
+-                    } else if (input.split("\\s")[0].matches("^s(tore)?$")) {
+-                        System.out.println(
+-                            c.executeInstruction("store", address).toString()
+-                        );
+-                    }
+-                } catch(IllegalAddressException e) {
+-                    System.out.println("Error parsing memory address: " + e);
+-                    continue;
+-                }
+-
+-                System.out.printf(
+-                    "Hitrate is %.2f and missrate is %.2f.\n",
+-                    c.getHitrate(), c.getMissrate()
+-                );
++            } else if (input.matches(regex)) {
++                sendInstruction(input);
+             } else if (input.matches("^$")) {
+                 // Intentionally left empty
++            } else if (input.equals("observe")) {
++                System.out.println("Now observing the DataCache for changes");
++                c.addDataCacheObserver(this);
++            } else if (input.equals("deobserve")) {
++                System.out.println("No longer observing the DataCache");
++                c.removeDataCacheObserver(this);
+             } else {
+                 System.err.println("Instruction not found `" + input + "`");
+             }
+         }
+     }
+ 
+-    private void endSimulation(){
++    private void endSimulation() {
+         System.out.println(c.displayCache());   // TODO: Remove
+         SimulationDTO simDTO = c.getSimulationData();
+         System.out.println("Simulation data:");
+@@ -145,4 +138,35 @@ public class View
+         System.out.println("Address offset size: "
+             + simDTO.getLayoutDTO().getOffsetSize() + " bits");
+     }
++
++    /**
++    * Recieves data from a DataCache observee.
++    */
++    public void recvDataCacheUpdate(String dataCacheContent) {
++        System.out.println(dataCacheContent);
++    }
++
++    private void sendInstruction(String input) {
++        long address = Long.decode(input.split("\\s")[1]);
++
++        try {
++            if (input.split("\\s")[0].matches("^l(oad)?$")) {
++                System.out.println(
++                    c.executeInstruction("load", address).toString()
++                );
++            } else if (input.split("\\s")[0].matches("^s(tore)?$")) {
++                System.out.println(
++                    c.executeInstruction("store", address).toString()
++                );
++            }
++        } catch(IllegalAddressException e) {
++            System.out.println("Error parsing memory address: " + e);
++            return;
++        }
++
++        System.out.printf(
++            "Hitrate is %.2f and missrate is %.2f.\n",
++            c.getHitrate(), c.getMissrate()
++        );
++    }
+ }

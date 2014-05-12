@@ -1,0 +1,139 @@
+diff --git a/source/is/mjuk/cache/AddressLayout.java b/source/is/mjuk/cache/AddressLayout.java
+index 1866c9f..8d46beb 100644
+--- a/source/is/mjuk/cache/AddressLayout.java
++++ b/source/is/mjuk/cache/AddressLayout.java
+@@ -28,13 +28,21 @@ public class AddressLayout {
+     * @return An {@link is.mjuk.cache.AddressDTO} containing the 
+     * tag, index and offset of the input address
+     */
+-    public AddressDTO parseAddress(long address)
++    public AddressDTO parseAddress (long address) throws IllegalAddressException
+     {
++        if ((0b11 & address) != 0x0) {
++            String error = "Memory address 0x" + Long.toString(address, 16)
++                + " is not divisible by four and do not point at a valid"
++                + " block address.";
++            throw new IllegalAddressException(error);
++        }
++
+         AddressDTO rv = new AddressDTO();
+         rv.setOffset(MisMath.intToUnary(this.offsetSize) & address);
+-        rv.setIndex(MisMath.intToUnary(this.indexSize) & address >>> offsetSize);
++        rv.setIndex(MisMath.intToUnary(this.indexSize) & address
++            >>> offsetSize);
+         rv.setTag(MisMath.intToUnary(this.tagSize) & address
+-            >>> offsetSize + indexSize); 
++            >>> offsetSize + indexSize);
+         return rv;
+     }
+ 
+diff --git a/source/is/mjuk/cache/CacheLayout.java b/source/is/mjuk/cache/CacheLayout.java
+index aa3cc05..c8d1779 100644
+--- a/source/is/mjuk/cache/CacheLayout.java
++++ b/source/is/mjuk/cache/CacheLayout.java
+@@ -30,7 +30,6 @@ public class CacheLayout
+     * @param blockSize Amount of <i>bytes</i> in a single block
+     * @param blockCount Amount of blocks in the cache
+     * @param associativity Associativity of the cache
+-    * @throws java.lang.IllegalArgumentException
+     */
+     public CacheLayout(int blockSize, int blockCount, int associativity) {
+         this.blockSize = blockSize;
+@@ -66,6 +65,7 @@ public class CacheLayout
+     * already.
+     *
+     * @return {@link is.mjuk.cache.AddressLayout}
++    * @throws TODO
+     */
+     public AddressLayout getAddressLayout() {
+         if (this.addressLayout == null) {
+diff --git a/source/is/mjuk/cache/Controller.java b/source/is/mjuk/cache/Controller.java
+index 4176e89..21474a6 100644
+--- a/source/is/mjuk/cache/Controller.java
++++ b/source/is/mjuk/cache/Controller.java
+@@ -45,7 +45,8 @@ public class Controller
+     * the instruction.
+     * @see is.mjuk.cache.Instruction
+     */
+-    public InstructionDTO executeInstruction(String type, long address) {
++    public InstructionDTO executeInstruction(String type, long address)
++    throws IllegalAddressException {
+         Instruction instruction;
+ 
+         if(type.equals("load")) {
+diff --git a/source/is/mjuk/cache/IllegalAddressException.java b/source/is/mjuk/cache/IllegalAddressException.java
+new file mode 100644
+index 0000000..0247e66
+--- /dev/null
++++ b/source/is/mjuk/cache/IllegalAddressException.java
+@@ -0,0 +1,23 @@
++package is.mjuk.cache;
++
++/**
++* IllegalAddressException is a throwable exception for 
++*/
++public class IllegalAddressException extends Exception {
++	public IllegalAddressException() {
++		super();
++	}
++
++
++	public IllegalAddressException(String errormsg) {
++		super(errormsg);
++	}
++
++	public IllegalAddressException(Throwable throwable) {
++		super(throwable);
++	}
++
++	public IllegalAddressException(String errormsg, Throwable throwable) {
++		super(errormsg, throwable);
++	}
++}
+\ No newline at end of file
+diff --git a/source/is/mjuk/cache/Instruction.java b/source/is/mjuk/cache/Instruction.java
+index 85e180e..714120b 100644
+--- a/source/is/mjuk/cache/Instruction.java
++++ b/source/is/mjuk/cache/Instruction.java
+@@ -24,7 +24,8 @@ public class Instruction {
+     * @param address Address of the destinated memory block.
+     */
+     public Instruction(DataCache dataCache, AddressLayout addressLayout, 
+-        InstructionType type, long address) {
++        InstructionType type, long address)
++    throws IllegalAddressException {
+         this.type = type;
+ 
+         this.address = addressLayout.parseAddress(address);
+diff --git a/source/is/mjuk/cache/View.java b/source/is/mjuk/cache/View.java
+index b6a7c36..3060d7e 100644
+--- a/source/is/mjuk/cache/View.java
++++ b/source/is/mjuk/cache/View.java
+@@ -92,14 +92,19 @@ public class View
+             } else if (input.matches("^[ls](oad|tore)?\\s\\d+$")) {
+                 long address = Long.parseLong(input.split("\\s")[1]);
+ 
+-                if (input.split("\\s")[0].matches("^l(oad)?$")) {
+-                    System.out.println(
+-                        c.executeInstruction("load", address).toString()
+-                    );
+-                } else if (input.split("\\s")[0].matches("^s(tore)?$")) {
+-                    System.out.println(
+-                        c.executeInstruction("store", address).toString()
+-                    );
++                try {
++                    if (input.split("\\s")[0].matches("^l(oad)?$")) {
++                        System.out.println(
++                            c.executeInstruction("load", address).toString()
++                        );
++                    } else if (input.split("\\s")[0].matches("^s(tore)?$")) {
++                        System.out.println(
++                            c.executeInstruction("store", address).toString()
++                        );
++                    }
++                } catch(IllegalAddressException e) {
++                    System.out.println("Error parsing memory address: " + e);
++                    continue;
+                 }
+ 
+                 System.out.printf(
