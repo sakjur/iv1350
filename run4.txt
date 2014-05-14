@@ -43,7 +43,7 @@ command_that_doesnt_exist
 Instruction not found `command_that_doesnt_exist`
 observe
 Now observing the DataCache for changes
-l 0x100
+load 0x100
 Index 0x0: invalid 0x0 valid 0x8 
 Index 0x1: invalid 0x0 valid 0x0 
 Index 0x2: invalid 0x0 invalid 0x0 

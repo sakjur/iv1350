@@ -1,6 +1,7 @@
 \documentclass[a4paper]{scrreprt}
 \usepackage{fullpage} % Slightly more margins
 \usepackage{amsfonts}
+\usepackage[usenames,dvipsnames]{color}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \usepackage[english]{babel}
@@ -17,6 +18,14 @@
 \usepackage{listings} % Source code highlighting
 \usepackage{algpseudocode} % Algorithms
 \usepackage{courier}
+
+\lstdefinelanguage{diff}{
+  morecomment=[f][\color{blue}]{@@},     % group identifier
+  morecomment=[f][\color{red}]-,         % deleted lines
+  morecomment=[f][\color{OliveGreen}]+,       % added lines
+  morecomment=[f][\color{NavyBlue}]{---}, % Diff header lines (must appear after +,-)
+  morecomment=[f][\color{NavyBlue}]{+++},
+}
 
 % Create header and footer
 \headheight 27pt
@@ -43,7 +52,16 @@
 \tableofcontents %Generates the TOC
 
 \chapter{Introduction}
-This report describes the implementation of a previously designed cache simulator made for a pre-graduate project in the course \textbf{IV1350} at KTH in Stockholm. The implementation is not for production usage.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[scale=0.5]{tldr.jpg}
+  \end{center}
+\end{figure}
+
+This report describes the process of implementing exceptions and GoF-patterns \texttt{Observer} and \texttt{Singleton} to a cache simulator made for a pre-graduate project in the course \textit{1350} at KTH in Stockholm. The implementation is not for production usage.
+
+The report may be downloaded from \\\textbf{http://web.ict.kth.se/$\sim$emiltu/iv1350-emiltu-s4.pdf}
 
 \begin{small}
 While implementing the application, I co-operated with \textit{Martin Alge}, \textit{Jesper Falk} and \textit{Erik Pettersson}.
@@ -66,19 +84,21 @@ The singleton is a pattern describing a class that describes a single object. Th
 
 For every advantage for using a singleton, there's quite often an equivalently strong disadvantage, such as singleton-classes quite often later are found being needed as normal classes, which can require a substantial rewrite of the application. There's also the issue of introducing a global state to the object oriented nature of the program, which by purist object oriented programmers is seen as a procedural programming plague.\footnote{See for example https://sites.google.com/site/steveyegge2/singleton-considered-stupid} Without arguing for or against the usage of singletons, it is widely used, and it's place in \textit{"Design Patterns"} by Gang of Four is hard to argue against.
 
-When implementing the singleton (patch file is seen in it's entirety at \ref{subsec:storagepatch}) the nature of the assignment called for several design choices, primarily, the \texttt{Storage}'s construction isn't thread-safe or memory-efficient (it'll probably never be collected by the garbage collection).
+When implementing the singleton (patch file is seen in it's entirety at \ref{subsec:storagepatch}) the nature of the assignment called for several design choices, primarily, the \texttt{Storage}'s construction isn't thread-safe or memory-efficient (it'll probably never be collected by the garbage collection). The implementation is shown in fig \ref{fig:diagstorage}.
 
 \subsection{Observer Observing DataCache}
 \label{subsec:Observer}
 
 The \textit{observer} pattern attempts to solve the issue where an entity needs to track another entity for updates without having to constantly poll the other entity. The elegance of the \textit{observer} pattern is how it avoids causing a mess but still slightly sidestepping the notion that the \textit{models} never may communicate directly with the \textit{view}. The \textit{observer} uses a pre-defined interface (for reference, see \ref{subsec:datacacheobserver.java}) that defines how a view that wishes to be able to observe a observable object must implement a specific class.
 
-Except for the slightly confusing concept of sidestepping the rules of \textit{MVC}, the observer-pattern also has the disadvantage that it's dependent on the observable object having access to call methods in the observing object and sometimes sending an unnecessary amount of data. Say for example a debugger which tracks memory, there polling might be a good idea to prevent a denial of service-attack caused by an overflow of updates being sent from the debugger when memory locations are changed. In this case, a second-wise poll may be an efficient solution. Another issue is that the observer pattern builds upon a mutually agreed upon API between anything that observes and the observed object, the creators of views must conform to a code style which they may not have agreed to. Whether this is an issue or not is a quite philosophic question.
+Except for the slightly confusing concept of sidestepping the rules of \textit{MVC}, the observer-pattern also has the disadvantage that it's dependent on the observable object having access to call methods in the observing object and sometimes sending an unnecessary amount of data. Say for example a debugger which tracks memory, where polling might be a good idea to prevent a denial of service-attack caused by an overflow of updates being sent from the debugger when memory locations are changed. In this case, a second-wise poll may be an efficient solution. Another issue is that the observer pattern builds upon a mutually agreed upon API between anything that observes and the observed object, the creators of views must conform to a code style which they may not have agreed to. Whether this is an issue or not is a quite philosophic question.
 
-The implementation of the \textit{observer} pattern in the cache simulator application is kept as simple as possible, where the \texttt{DataCache} (\ref{subsec:datacache.java}) stores a list of \texttt{DataCacheObserver}-implementors (\ref{subsec:datacacheobserver.java}) which are added and removed by a public function, which is also possibly being relayed through the \texttt{Controller} (\ref{subsec:controller.java}). The \texttt{View} is implemented as the observer, and is added to the list of observers on the user's request. Whenever the DataCache is updated (i.e. on misses when loading or storing data from it), the public function \texttt{recvDataCacheUpdates(String s)} is called with the content of the new cache to any observer.
+The implementation of the \textit{observer} pattern in the cache simulator application is kept as simple as possible, where the \texttt{DataCache} (\ref{subsec:datacache.java}) stores a list of \texttt{DataCacheObserver}-implementors (\ref{subsec:datacacheobserver.java}) which are added and removed by a public function, which is also possibly being relayed through the \texttt{Controller} (\ref{subsec:controller.java}). The \texttt{View} is implemented as the observer, and is added to the list of observers on the user's request. Whenever the DataCache is updated (i.e. on misses when loading or storing data from it), the public function \texttt{recvDataCacheUpdates(String s)} is called with the content of the new cache to any observer. The implementation of the observer is shown in fig \ref{fig:diagobserver} and \ref{fig:interactobserver}.
 
 \section{Exceptions}
+The \texttt{AddressLayout} (\ref{subsec:addresslayout.java}) has added support for the new \texttt{IllegalAddressException} (\ref{subsec:illegaladdressexception.java}) which is thrown whenever the user enters an address which is not divisible by four (word length is defined in bytes). Adding the exception simultaneously caused for adding \texttt{throws} to the declaration of the \texttt{parseAddress()}-method in the \texttt{AddressLayout} and to the \texttt{executeInstruction()}-method in the \texttt{Instruction}-class (\ref{subsec:instruction.java}) and finally to the \texttt{executeInstruction()} in the \texttt{Controller} (\ref{subsec:controller.java}).
 
+In order to catch the exception, the \texttt{View}-class is modified with a \texttt{try}-statement that catches the \texttt{IllegalAddressException} on which it prints the error that the \texttt{parseAddress()} includes with the exception as a description of the specific error and then continues by asking the user to enter another command.
 
 \chapter{Result}
 \label{sec:result}
@@ -243,23 +263,51 @@ These patches are the unchanged initial diffs for the git commit that introduced
 \subsection{Storage Patch}
 \label{subsec:storagepatch}
 
-\lstinputlisting{diff/storage.diff}
+\lstinputlisting[language=diff,breaklines=true]{diff/storage.diff}
 
 \subsection{Exception Patch}
 \label{subsec:exceptionpatch}
 
-\lstinputlisting{diff/exception.diff}
+\lstinputlisting[language=diff,breaklines=true]{diff/exception.diff}
 
 
 \subsection{Observer Patch}
 \label{subsec:observerpatch}
 
-\lstinputlisting{diff/observer.diff}
+\lstinputlisting[language=diff,breaklines=true]{diff/observer.diff}
 
 \section{Utilities}
 
 \subsection{Class: MisMath}
 \label{subsec:mismath.java}
 \lstinputlisting[language=Java]{cachesim/source/is/mjuk/utils/MisMath.java}
+
+\chapter{Attachments}
+
+\section{Diagrams}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[scale=0.4]{ClassDiagramObserverPattern.png}
+    \caption{Class Diagram for the implementation of the Observer Diagram}
+    \label{fig:diagobserver}
+  \end{center}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[scale=0.6]{ObserverInteractionDiagram.png}
+    \caption{Interaction Diagram describing how the implementation of the \texttt{Observer}-pattern works}
+    \label{fig:interactobserver}
+  \end{center}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[scale=1.0]{ClassDiagramStorage.png}
+    \caption{Class Diagram for the \texttt{Storage}-class, which implements the singleton pattern}
+    \label{fig:diagstorage}
+  \end{center}
+\end{figure}
 
 \end{document}
